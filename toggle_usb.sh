@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Script: toggle_usb (part of stig-fix)
+# Script: toggle_usb (part of system-hardening)
 # Description: RHEL 6 Hardening Script to enbale or disable a device
 # License: GPL (see COPYING)
 # Copyright: Red Hat Consulting, Sep 2013
@@ -55,15 +55,13 @@ apply_configuration() {
 		cp $BASE_BACKUP/usb-storage.ko.$KERNEL $KERNEL_MODULE
 	fi
 
-
-	/sbin/grubby --update-kernel=ALL --remove-args="nousb"
 	if [ -f $BLACKLIST ]; then
 		grep -q usb-storage $BLACKLIST 
 		if [ $? -eq 0 ]; then
 			sed -i '/^install usb-storage \/bin\/false/ c\#install usb-storage \/bin\/false' $BLACKLIST
 		fi
 	fi
-	/usr/bin/logger -p security.info "Enabled USB Mass Storage Module (stig-fix)"
+	/usr/bin/logger -p security.info "Enabled USB Mass Storage Module (system-hardening)"
 	echo "Done."
 
 }
@@ -77,7 +75,6 @@ remove_configuration() {
 	if [ -f $BLACKLIST ]; then
 		grep -q usb-storage $BLACKLIST
 		if [ $? -eq 0 ]; then
-			/sbin/grubby --update-kernel=ALL --args="nousb"
 			sed -i '/^#install usb-storage \/bin\/false/ c\install usb-storage \/bin\/false' $BLACKLIST
 			/sbin/lsmod | grep -q usb_storage
 			if [ $? -eq 0 ]; then
@@ -85,7 +82,7 @@ remove_configuration() {
 			fi
 		fi
 	fi
-	/usr/bin/logger -p security.info "Disabled USB Mass Storage Module (stig-fix) by."
+	/usr/bin/logger -p security.info "Disabled USB Mass Storage Module (system-hardening) by."
 	echo "Done."
 }
 

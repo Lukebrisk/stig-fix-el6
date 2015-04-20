@@ -4,7 +4,7 @@
 # This script is NOT SUPPORTED by Red Hat Global Support Services.
 # Please contact Josh Waldman for more information.
 #
-# Script: apply.sh (stig-fix)
+# Script: apply.sh (system-hardening)
 # Description: RHEL 6 Hardening Script (Master Script)
 # License: GPL (see COPYING)
 # Copyright: Red Hat Consulting, Sep 2013
@@ -27,7 +27,7 @@ VERSION='1.1'
 BASE_DIR=`dirname $(realpath $0)`
 BACKUP=$BASE_DIR/backups
 CONFIG=$BASE_DIR/config
-LOG=/var/log/stig-fix-$DATE.log
+LOG=/var/log/system-hardening-$DATE.log
 
 # Script Version
 function version() {
@@ -289,7 +289,12 @@ cp -f ./config/auditd.conf /etc/audit/auditd.conf
 if [ "$ARCH" == "x86_64" ]; then
 	cp -f ./config/audit.rules /etc/audit/audit.rules
 else
-	grep -v 'b64' ./config/audit.rules > /etc/audit/audit.rules
+	grep -v 'b64' ./config/audit.rules > /etc/audit/rules.d/audit.rules
+fi
+
+# Remove RHEL 6.6 /etc/audit/rules.d directory
+if [ -d /etc/audit/rules.d ]; then
+	rm -rf /etc/audit/rules.d
 fi
 
 #### FIREWALL CONFIGURATIONS (IPV4/IPV6)
@@ -331,6 +336,7 @@ fi
 rpm -q scrub &>/dev/null
 if [ $? -eq 0 ]; then
 	cp ./config/clean_system /etc/init.d/clean_system
+	chmod +x /etc/init.d/clean_system
 	/sbin/chkconfig --add clean_system
 	/sbin/chkconfig --level 06 clean_system on
 	/sbin/chkconfig --level 12345 clean_system off
@@ -344,73 +350,9 @@ else
 	fi
 fi
 
-# CAT I SECURITY ISSUES
-if [ -z "$QUIET" ]; then
-	echo
-	echo -e "\033[1mCAT I Security Issues\033[0m"
-	echo
-fi
+# SECURITY ISSUES
 echo >> $LOG
-echo "CAT I Security Issues" >> $LOG
-echo >> $LOG
-for i in `ls cat1/*.sh`; do 
-	if [ -z "$QUIET" ]; then
-		echo  "#### Executing Script: $i" | tee -a $LOG
-		sh $i 2>&1 | tee -a $LOG
-	else
-		echo "#### Executing Script: $i" >> $LOG
-		sh $i >> $LOG
-	fi
-done;
-
-# CAT II SECURITY ISSUES
-if [ -z "$QUIET" ]; then
-	echo
-	echo -e "\033[1mCAT II Security Issues\033[0m"
-	echo
-fi
-echo >> $LOG
-echo "CAT II Security Issues" >> $LOG
-echo >> $LOG
-for i in `ls cat2/*.sh`; do 
-	if [ -z "$QUIET" ]; then
-		echo  "#### Executing Script: $i" | tee -a $LOG
-		sh $i 2>&1 | tee -a $LOG
-	else
-		echo "#### Executing Script: $i" >> $LOG
-		sh $i >> $LOG
-	fi
-done;
-
-# CAT III SECURITY ISSUES
-if [ -z "$QUIET" ]; then
-	echo
-	echo -e "\033[1mCAT III Security Issues\033[0m"
-	echo
-fi
-echo >> $LOG
-echo "CAT III Security Issues" >> $LOG
-echo >> $LOG
-for i in `ls cat3/*.sh`; do 
-	if [ -z "$QUIET" ]; then
-		echo  "#### Executing Script: $i" | tee -a $LOG
-		sh $i 2>&1 | tee -a $LOG
-	else
-		echo "#### Executing Script: $i" >> $LOG
-		sh $i >> $LOG
-	fi
-done;
-
-# CAT IV SECURITY ISSUES
-if [ -z "$QUIET" ]; then
-	echo
-	echo -e "\033[1mCAT IV Security Issues\033[0m"
-	echo
-fi
-echo >> $LOG
-echo "CAT IV Security Issues" >> $LOG
-echo >> $LOG
-for i in `ls cat4/*.sh`; do 
+for i in `ls scripts/*.sh`; do 
 	if [ -z "$QUIET" ]; then
 		echo  "#### Executing Script: $i" | tee -a $LOG
 		sh $i 2>&1 | tee -a $LOG

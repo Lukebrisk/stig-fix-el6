@@ -6,6 +6,10 @@ echo ' Additional Hardening: Gnome Desktop Settings'
 echo '==================================================='
 
 if [ -x /usr/bin/gconftool-2 ]; then
+
+	# Set the default to Runlevel 3 (No XWindows)
+	sed -i 's/id:5:initdefault:/id:3:initdefault:/' /etc/inittab
+
 	# Remove Red Hat Registration Reminder
 	rm -f /etc/xdg/autostart/rhsm*desktop
 
@@ -137,5 +141,22 @@ EOF
               --config-source xml:readwrite:/etc/gconf/gconf.xml.mandatory \
               --type string \
               --set /apps/gnome-screensaver/mode blank-only
-              
+
+	# Disable Ctrl-Alt-Del in GNOME
+	gconftool-2 --direct \
+	      --config-source xml:readwrite:/etc/gconf/gconf.xml.mandatory \
+	      --type string \
+	      --set /apps/gnome_settings_daemon/keybindings/power ""
+	      
+	# Disable Clock Temperature
+	gconftool-2 --direct \
+	      --config-source xml:readwrite:/etc/gconf/gconf.xml.mandatory \
+	      --type bool \
+	      --set /apps/panel/applets/clock/prefs/show_temperature false
+
+	# Disable Clock Weather
+	gconftool-2 --direct \
+	      --config-source xml:readwrite:/etc/gconf/gconf.xml.mandatory \
+	      --type bool \
+	      --set /apps/panel/applets/clock/prefs/show_weather false
 fi
